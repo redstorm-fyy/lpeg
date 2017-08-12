@@ -147,13 +147,13 @@ func newroot2sib(a, b *Pattern, tag tTag) *Pattern {
 
 func newroot1sib(a *Pattern, tag tTag) *Pattern {
 	patt := newtree(1 + len(a.tree))
-	a.tree[0].tag = tag
+	patt.tree[0].tag = tag
 	copy(patt.tree[sib1(patt.tree, 0):], a.tree)
 	patt.k = a.k
 	return patt
 }
 
-func addtoktable(patt *Pattern, value interface{}) int {
+func addtoktable(patt *Pattern, value interface{}) uint16 {
 	if value == nil {
 		return 0
 	}
@@ -161,7 +161,7 @@ func addtoktable(patt *Pattern, value interface{}) int {
 		panic("too many values in pattern")
 	}
 	patt.k.tb = append(patt.k.tb, value)
-	return len(patt.k.tb) - 1
+	return uint16(len(patt.k.tb)) - 1
 }
 
 func mergektable(to, from *Pattern, tree []tTree, cur int32) {
@@ -252,7 +252,7 @@ func getpatt(value interface{}) *Pattern {
 	case CaptureFunction, FoldFunction, RuntimeFunction:
 		patt = newtree(2)
 		patt.tree[0].tag = tRunTime
-		patt.tree[0].key = uint16(addtoktable(patt, value))
+		patt.tree[0].key = addtoktable(patt, value)
 		patt.tree[sib1(patt.tree, 0)].tag = tTrue
 	case *Pattern:
 		patt = value
@@ -345,7 +345,7 @@ func fixonecall(patt *Pattern, tree []tTree, g, t int32, postable map[string]int
 func initialrulename(patt *Pattern, g Grammar) {
 	if patt.tree[sib1(patt.tree, 0)].key == 0 { // initial rule is not referenced?
 		ruleName := g.r[0].name
-		patt.tree[sib1(patt.tree, 0)].key = uint16(addtoktable(patt, ruleName))
+		patt.tree[sib1(patt.tree, 0)].key = addtoktable(patt, ruleName)
 	}
 }
 
@@ -497,4 +497,18 @@ tailcall:
 func prepcompile(patt *Pattern) []instruction {
 	finalfixcompile(patt.tree, 0)
 	return compile(patt)
+}
+
+func captureaux(a *Pattern, cap capKind, value interface{}) *Pattern {
+	patt := newroot1sib(a, tCapture)
+	patt.tree[0].cap = cap
+	patt.tree[0].key = addtoktable(patt, value)
+	return patt
+}
+
+func captureauxzero(a *Pattern, cap capKind) *Pattern {
+	patt := newroot1sib(a, tCapture)
+	patt.tree[0].cap = cap
+	patt.tree[0].key = 0
+	return patt
 }

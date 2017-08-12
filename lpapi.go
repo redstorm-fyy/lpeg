@@ -123,6 +123,22 @@ func (a *Pattern) Sub(b *Pattern) *Pattern {
 	return patt
 }
 
+func (a *Pattern) Sc(s string) *Pattern {
+
+}
+
+func (a *Pattern) Nc(n int) *Pattern {
+
+}
+
+func (a *Pattern) Qc() *Pattern {
+
+}
+
+func (a *Pattern) Fc() *Pattern {
+
+}
+
 // -------------------- the api
 
 // P :Pattern
@@ -157,7 +173,7 @@ func R(value ...string) *Pattern {
 
 func V(value string) *Pattern {
 	patt := newleaf(tOpenCall)
-	patt.tree[0].key = uint16(addtoktable(patt, value))
+	patt.tree[0].key = addtoktable(patt, value)
 	return patt
 }
 
