@@ -55,7 +55,7 @@ func sib1(tree []tTree, cur int32) int32 {
 }
 
 func sib2(tree []tTree, cur int32) int32 {
-	return tree[cur].psn // ps
+	return cur + tree[cur].psn // ps
 }
 
 type ktable struct {
@@ -165,7 +165,7 @@ func addtoktable(patt *Pattern, value interface{}) int {
 }
 
 func mergektable(to, from *Pattern, tree []tTree, cur int32) {
-	n := len(to.k.tb)
+	n := len(to.k.tb) - 1
 	concatktable(from, to)
 	correctkeys(tree, cur, uint16(n))
 }
@@ -272,7 +272,7 @@ func (g *Grammar) treeSize() int {
 	for _, r := range g.r {
 		size += 1 + len(r.patt.tree)
 	}
-	return size
+	return size + 1
 }
 
 func newgrammar(g Grammar) *Pattern {
