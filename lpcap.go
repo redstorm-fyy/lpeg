@@ -321,22 +321,25 @@ func tablecap(cs *capState) int {
 		cs.push = append(cs.push, tb)
 		return 1
 	}
+	var start = 1
 	for !isclosecap(&cs.ocap[cs.cap]) {
 		if cs.ocap[cs.cap].kind == cGroup && cs.ocap[cs.cap].idx != 0 { // named group?
 			key := getvalue(cs, cs.cap)
 			pushonenestedvalue(cs)
 			value := cs.push[len(cs.push)-1]
 			cs.push = cs.push[:len(cs.push)-1]
-			if tb.dic == nil {
-				tb.dic = make(map[interface{}]interface{}, 8)
-			}
-			tb.dic[key] = value
+			tb[key] = value
 		} else {
-			if tb.seq == nil {
-				tb.seq = make([]interface{}, 1, 8) // start from 1
-			}
 			k := pushcapture(cs)
-			tb.seq = append(tb.seq, cs.push[len(cs.push)-k:]...)
+			for ; ; start++ {
+				if _, ok := tb[start]; !ok {
+					break
+				}
+			}
+			for i := 0; i < k; i++ {
+				tb[start+i] = cs.push[len(cs.push)-k+i]
+			}
+			start += k
 			cs.push = cs.push[:len(cs.push)-k]
 		}
 	}
@@ -350,25 +353,10 @@ func querycap(cs *capState) int {
 	pushonenestedvalue(cs)
 	key := cs.push[len(cs.push)-1]
 	tb := getvalue(cs, cap).(CaptureTable)
-	switch key := key.(type) {
-	case int:
-		if key > 0 && key < len(tb.seq) {
-			cs.push[len(cs.push)-1] = tb.seq[key]
-			return 1
-		}
-		if tb.dic != nil {
-			if value, ok := tb.dic[key]; ok {
-				cs.push[len(cs.push)-1] = value
-				return 1
-			}
-		}
-	default:
-		if tb.dic != nil {
-			if value, ok := tb.dic[key]; ok {
-				cs.push[len(cs.push)-1] = value
-				return 1
-			}
-		}
+	value, ok := tb[key]
+	if ok {
+		cs.push[len(cs.push)-1] = value
+		return 1
 	}
 	cs.push = cs.push[:len(cs.push)-1]
 	return 0

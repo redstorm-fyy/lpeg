@@ -436,7 +436,7 @@ func verifygrammar(grammar []tTree) {
 
 func checkloops(tree []tTree, cur int32) bool {
 tailcall:
-	if tree[cur].tag == tRep && nullable(tree, (sib2(tree, cur))) {
+	if tree[cur].tag == tRep && nullable(tree, (sib1(tree, cur))) {
 		return true
 	} else if tree[cur].tag == tGrammar {
 		return false

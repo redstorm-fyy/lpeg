@@ -1,9 +1,5 @@
 package lpeg
 
-type CaptureTable struct {
-	seq []interface{}
-	dic map[interface{}]interface{}
-}
 type FoldFunction func(cap1 interface{}, cap2 ...interface{}) interface{}
 type CaptureFunction func(cap ...interface{}) []interface{}
 type RuntimeFunction func(subject string, position int, cap ...interface{}) (newpos int, newcap []interface{})
@@ -21,6 +17,17 @@ type Grammar struct {
 
 func (g *Grammar) AddRule(name string, patt *Pattern) {
 	g.r = append(g.r, rule{name: name, patt: patt})
+}
+
+type CaptureTable map[interface{}]interface{}
+
+func (t *CaptureTable) At(key interface{}) (interface{}, bool) {
+	value, ok := (*t)[key]
+	return value, ok
+}
+
+func (t *CaptureTable) Set(key interface{}, value interface{}) {
+	(*t)[key] = value
 }
 
 // -------------------- the method

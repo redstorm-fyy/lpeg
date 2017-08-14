@@ -180,7 +180,7 @@ func match(subject string, s int, op []instruction, cs *capState) (int, []captur
 			}
 			continue
 		case iChar:
-			if subject[s] == toinst(&op[p]).aux && s < e {
+			if s < e && subject[s] == toinst(&op[p]).aux {
 				p++
 				s++
 			} else {
@@ -188,14 +188,14 @@ func match(subject string, s int, op []instruction, cs *capState) (int, []captur
 			}
 			continue
 		case iTestChar:
-			if subject[s] == toinst(&op[p]).aux && s < e {
+			if s < e && subject[s] == toinst(&op[p]).aux {
 				p += 2
 			} else {
 				p += getoffset(op, p)
 			}
 			continue
 		case iSet:
-			if testchar(tobuff(&op[p+1]), subject[s]) && s < e {
+			if s < e && testchar(tobuff(&op[p+1]), subject[s]) {
 				p += charsetInstsize
 				s++
 			} else {
@@ -203,7 +203,7 @@ func match(subject string, s int, op []instruction, cs *capState) (int, []captur
 			}
 			continue
 		case iTestSet:
-			if testchar(tobuff(&op[p+2]), subject[s]) && s < e {
+			if s < e && testchar(tobuff(&op[p+2]), subject[s]) {
 				p += 1 + charsetInstsize
 			} else {
 				p += getoffset(op, p)
