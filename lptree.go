@@ -512,3 +512,22 @@ func captureauxzero(a *Pattern, cap capKind) *Pattern {
 	patt.tree[0].key = 0
 	return patt
 }
+
+func auxemptycap(tree []tTree, cur int32, cap capKind) {
+	tree[cur].tag = tCapture
+	tree[cur].cap = cap
+	tree[sib1(tree, cur)].tag = tTrue
+}
+
+func newemptycapkey(cap capKind, value interface{}) *Pattern {
+	patt := newtree(2)
+	auxemptycap(patt.tree, 0, cap)
+	patt.tree[0].key = addtoktable(patt, value)
+	return patt
+}
+
+func newemptycap(cap capKind) *Pattern {
+	patt := newtree(2)
+	auxemptycap(patt.tree, 0, cap)
+	return patt
+}

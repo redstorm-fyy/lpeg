@@ -314,7 +314,7 @@ func backrefcap(cs *capState) int {
 }
 
 func tablecap(cs *capState) int {
-	tb := TableCapture{}
+	tb := CaptureTable{}
 	cap := &cs.ocap[cs.cap]
 	cs.cap++
 	if isfullcap(cap) {
@@ -349,7 +349,7 @@ func querycap(cs *capState) int {
 	cap := cs.cap
 	pushonenestedvalue(cs)
 	key := cs.push[len(cs.push)-1]
-	tb := getvalue(cs, cap).(TableCapture)
+	tb := getvalue(cs, cap).(CaptureTable)
 	switch key := key.(type) {
 	case int:
 		if key > 0 && key < len(tb.seq) {
