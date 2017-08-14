@@ -284,6 +284,8 @@ func match(subject string, s int, op []instruction, cs *capState) (int, []captur
 				}
 				adddyncaptures(s, cap[captop-adddyn-2:], adddyn, len(cs.push)-adddyn)
 			}
+			p++
+			continue
 		case iCloseCapture:
 			s1 := s
 			if cap[captop-1].siz == 0 && s1-cap[captop-1].s < 0xff {

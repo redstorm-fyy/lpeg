@@ -3,6 +3,7 @@ package lpeg
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 )
 
@@ -99,10 +100,111 @@ func atwordboundary(p *Pattern) *Pattern {
 }
 
 func TestAnywhere2(*testing.T) {
-	//p2 := anywhere2(P("world"))
-	//fmt.Println(Match(p2, "hello world"))
-	//p3 := anaywhere3(P("world"))
-	//fmt.Println(Match(p3, "hello world"))
+	p2 := anywhere2(P("world"))
+	fmt.Println(Match(p2, "hello world"))
+	p3 := anaywhere3(P("world"))
+	fmt.Println(Match(p3, "hello world"))
 	p4 := atwordboundary(P("world"))
 	fmt.Println(Match(p4, "hello world"))
+}
+
+func TestParentheses(*testing.T) {
+	var g Grammar
+	g.AddRule("S",
+		P("(").
+			Seq(
+				P(1).Sub(S("()")).
+					Or(
+						V("S"),
+					).
+					Pow(0),
+			).
+			Seq(P(")")))
+	patt := P(g)
+	fmt.Println(Match(patt, "(((sdf(sd)sd)(sd(sdf)sdf))as)df"))
+}
+
+func gsub(s string, p string, repl string) (int, interface{}) {
+	patt := Cs(P(p).Sc(repl).Or(P(1)).Pow(0))
+	return Match(patt, s)
+}
+
+func TestSubstitude(*testing.T) {
+	fmt.Println(gsub("dabcd", "abc", "haha"))
+}
+
+func TestCommaSeparate(*testing.T) {
+	p := P(1).Sub(P(`"`)).Or(P(`""`).Sc(`"`)).Pow(0)
+	c := C(P(1).Sub(S(`,\n"`)).Pow(0))
+	field := P(`"`).Seq(Cs(p).Seq(P(`"`))).Or(c)
+	record := field.Seq(P(",").Seq(field).Pow(0)).Seq(P("\n").Or(P(-1)))
+	fmt.Println(Match(record, "ab,\"cd\",ef,g"))
+	fmt.Println(Match(record, "ab,\"cd,\"ef,g"))
+	fmt.Println(Match(record, "ab,\"\"cd\"\",ef,g"))
+}
+
+func TestLongstring(*testing.T) {
+	equals := P("=").Pow(0)
+	open := P("[").Seq(Cgn(equals, "init")).Seq(P("[")).Seq(P("\n").Pow(-1))
+	close := P("]").Seq(C(equals)).Seq(P("]"))
+	closeeq := Cmt(close.Seq(Cb("init")), func(s string, i int, cap ...interface{}) (int, []interface{}) {
+		a := cap[0].(string)
+		b := cap[1].(string)
+		if a == b {
+			return i, nil
+		}
+		return -1, nil
+	})
+	_ = closeeq
+	strp := open.Seq(C(P(1).Sub(closeeq).Pow(0))).Seq(close).Nc(1)
+	//strp := open.Seq(C(P(1).Sub(close).Pow(0))).Seq(close).Nc(1)
+	fmt.Println(Match(strp, "[==[abcd]==]"))
+}
+
+func eval(x interface{}) int {
+	switch x := x.(type) {
+	case string:
+		i, err := strconv.Atoi(x)
+		if err != nil {
+			panic(err)
+		}
+		return i
+	case CaptureTable:
+		op1 := eval(x[1])
+		for i := 2; i < len(x); i++ {
+			op := x[i]
+			op2 := eval(x[i+1])
+			if op, ok := op.(string); !ok {
+				panic(op)
+			}
+			switch op {
+			case "+":
+				op1 = op1 + op2
+			case "-":
+				op1 = op1 - op2
+			case "*":
+				op1 = op1 * op2
+			case "/":
+				op1 = op1 / op2
+			}
+		}
+		return op1
+	default:
+		panic(reflect.TypeOf(x))
+	}
+}
+func TestArithmetic(*testing.T) {
+	space := S(" \n\t").Pow(0)
+	number := C(P("-").Pow(-1).Seq(R("09").Pow(1))).Seq(space)
+	termop := C(S("+-")).Seq(space)
+	factorop := C(S("*/")).Seq(space)
+	open := P("(").Seq(space)
+	close := P(")").Seq(space)
+	var g Grammar
+	g.AddRule("Exp", Ct(V("Term").Seq(termop.Seq(V("Term")).Pow(0))))
+	g.AddRule("Term", Ct(V("Factor").Seq(factorop.Seq(V("Factor")).Pow(0))))
+	g.AddRule("Factor", number.Or(open.Seq(V("Exp")).Seq(close)))
+	patt := space.Seq(P(g)).Seq(P(-1))
+	i, cap := Match(patt, "2*(5+7)-3/2")
+	fmt.Println(i, len(cap), eval(cap[0]))
 }

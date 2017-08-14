@@ -444,7 +444,7 @@ func runtimecap(cs *capState, close int, s int) (success bool, position int, add
 	}
 	cs.push = append(cs.push, newcap...)
 	adddyn = len(newcap)
-	success = position >= s+1 && position < len(cs.s)+1
+	success = position >= s+1 && position <= len(cs.s)+1
 	return
 }
 
